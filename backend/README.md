@@ -53,6 +53,8 @@ backend/
 
 ### 1. Java 설치
 
+> **Java 24 이상이 필수입니다.** (class file version 68.0)
+
 **macOS** (Homebrew)
 ```bash
 brew install --cask temurin
@@ -255,6 +257,6 @@ java -jar jar/prography-be-assignment-1.0.0.jar
 | 증상 | 해결 방법 |
 |------|----------|
 | `java` 명령을 찾을 수 없음 | `JAVA_HOME` / `PATH` 설정 확인 |
+| `UnsupportedClassVersionError` | Java 24 이상 필요 (`class file version 68.0`) |
 | 8080 포트 충돌 | `SERVER_PORT=8081` 환경변수로 포트 변경 |
-| H2 콘솔 접속 실패 | `application.yml`의 `spring.h2.console.enabled` 확인 |
 | 서버 시작 후 데이터 없음 | 메모리 DB 사용 중 — 재시작 시 시드 데이터 자동 로드 |

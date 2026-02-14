@@ -4,12 +4,32 @@
 
 ---
 
+## 앱 로그인 가이드
+
+`prography` 계정으로 로그인하면 Member API 전체를 체험할 수 있습니다.
+
+```
+POST /api/v1/auth/login
+{ "loginId": "prography", "password": "prography" }
+```
+
+로그인 후 응답의 `memberId`(=2)를 사용하여:
+- `GET /api/v1/members/2` — 내 정보 조회
+- `GET /api/v1/sessions` — 일정 목록 조회
+- `POST /api/v1/attendances` — QR 출석 체크 (`hashValue`: `프로그라피 화이팅`)
+- `GET /api/v1/attendances?memberId=2` — 내 출결 기록 조회
+- `GET /api/v1/members/2/attendance-summary` — 내 출결 요약 조회
+
+> prography 계정은 프리시즌 4건(출석/지각/결석/공결) + 정규 세션 15건의 다양한 출결 데이터를 보유하고 있습니다.
+
+---
+
 ## 계정 정보
 
-| 구분 | loginId | password | 역할 |
-|------|---------|----------|------|
-| 관리자 | `admin` | `prography` | ADMIN |
-| 테스트 계정 | `prography` | `prography` | MEMBER |
+| 구분          | loginId         | password    | 역할     |
+| ----------- | --------------- | ----------- | ------ |
+| 관리자         | `admin`         | `prography` | ADMIN  |
+| 테스트 계정      | `prography`     | `prography` | MEMBER |
 | 일반 회원 (34명) | `lee.seoyeon` 등 | `prography` | MEMBER |
 
 > 모든 계정의 비밀번호는 `prography`로 통일되어 있습니다.
@@ -18,19 +38,34 @@
 
 ## 기수 & 파트 & 팀
 
-### 기수
+### 기수 (11개)
 
 | ID | 기수 |
 |----|------|
-| 1 | 10기 |
-| 2 | 11기 (현재 운영 기수) |
+| 1 | 1기 |
+| 2 | 2기 |
+| 3 | 3기 |
+| 4 | 4기 |
+| 5 | 5기 |
+| 6 | 6기 |
+| 7 | 7기 |
+| 8 | 8기 |
+| 9 | 9기 |
+| 10 | 10기 |
+| 11 | 11기 (현재 운영 기수) |
 
-### 파트 (기수별 6개, 총 12개)
+> 1기~10기는 기수 정보만 존재하며, 파트/팀/회원 데이터는 11기에만 있습니다.
 
-| ID | 기수 | 파트명 |
-|----|------|--------|
-| 1~6 | 10기 | iOS, AOS, BE(Spring), FE, PO, Designer |
-| 7~12 | 11기 | iOS, AOS, BE(Spring), FE, PO, Designer |
+### 파트 (11기, 6개)
+
+| ID | 파트명 |
+|----|--------|
+| 1 | iOS |
+| 2 | AOS |
+| 3 | BE(Spring) |
+| 4 | FE |
+| 5 | PO |
+| 6 | Designer |
 
 ### 팀 (11기, 6개)
 
@@ -230,8 +265,8 @@
 
 | 항목 | 수량 |
 |------|------|
-| 기수 | 2개 (10기, 11기) |
-| 파트 | 12개 (기수당 6개) |
+| 기수 | 11개 (1기~11기) |
+| 파트 | 6개 (11기) |
 | 팀 | 6개 (11기) |
 | 회원 | 36명 (관리자 1 + 회원 35) |
 | 세션 | 20개 (정규 15 + 프리시즌 5) |
