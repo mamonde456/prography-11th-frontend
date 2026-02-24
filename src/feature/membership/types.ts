@@ -31,3 +31,7 @@ export interface IInputs {
   phone: string;
   teamName: string;
 }
+
+export interface ICreateInputs extends IInputs {
+  cohortId: string;
+}
