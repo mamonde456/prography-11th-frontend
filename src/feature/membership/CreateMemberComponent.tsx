@@ -49,19 +49,26 @@ export default function CreateMemberComponent() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<Omit<ICreateInputs, "generation">>();
-  const onSubmit: SubmitHandler<Omit<ICreateInputs, "generation">> = (data) => {
+  } = useForm<Omit<ICreateInputs, "generation" | "partName" | "temaName">>();
+  const onSubmit: SubmitHandler<
+    Omit<ICreateInputs, "generation" | "partName" | "temaName">
+  > = (data) => {
     console.log(data);
+    const newFormData = {
+      ...data,
+      password: "prography",
+    };
 
-    // createMember.mutate(data);
+    createMember.mutate(newFormData);
     // setIsCreateMemberView(false);
   };
 
   useEffect(() => {
     console.log(watch("cohortId"));
-    if (isSuccess) {
-      const selectedId = watch("cohortId") || data.at(-1)?.name;
-      const selected = data.find((el) => el.name === selectedId);
+    console.log(data);
+    if (data) {
+      const selectedId = Number(watch("cohortId")) || Number(data.at(-1)?.id);
+      const selected = data.find((el) => el.id === selectedId);
       console.log(data);
       console.log(selectedId);
       console.log(selected);
@@ -69,11 +76,15 @@ export default function CreateMemberComponent() {
         setSelectedCohortId(selected.id);
       }
     }
-  }, [watch("cohortId"), isSuccess]);
+  }, [watch("cohortId"), data]);
 
   const createMember = useMutation({
     mutationKey: ["updateMemberInfo"],
-    mutationFn: async (userInfo: Omit<ICreateInputs, "generation">) => {
+    mutationFn: async (
+      userInfo: Omit<ICreateInputs, "generation" | "partName" | "temaName"> & {
+        password: string;
+      }
+    ) => {
       const res = await fetch("http://localhost:8080/api/v1/admin/members", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,69 +127,75 @@ export default function CreateMemberComponent() {
         <select
           className="h-10 rounded-xs border indent-2 mb-4"
           id="cohortId"
+          defaultValue={data?.at(-1)?.id}
           {...register("cohortId", { required: true })}
         >
           {isSuccess && (
             <>
               {data.map((cohort, i) => (
-                <option key={cohort.id} selected={data.length - 1 === i}>
-                  {cohort.name}
-                </option>
-              ))}
-            </>
-          )}
-        </select>
-
-        <label htmlFor="partName">파트</label>
-        <select
-          className="h-10 rounded-xs border indent-2 mb-4"
-          id="partName"
-          {...register("partName", { required: true })}
-        >
-          {cohortData && (
-            <>
-              (
-              {cohortData.parts.map((cohort, i) => (
                 <option
                   key={cohort.id}
-                  //   selected={cohortData.parts.length - 1 === i}
+                  // selected={data.length - 1 === i}
+                  value={cohort.id}
                 >
                   {cohort.name}
                 </option>
               ))}
-              )
             </>
           )}
         </select>
+        {cohortData && cohortData.parts.length > 0 && (
+          <>
+            <label htmlFor="partId">파트</label>
+            <select
+              className="h-10 rounded-xs border indent-2 mb-4"
+              id="partId"
+              {...register("partId", { required: true })}
+            >
+              {cohortData && (
+                <>
+                  (
+                  {cohortData.parts.map((part, i) => (
+                    <option key={part.id} value={part.id}>
+                      {part.name}
+                    </option>
+                  ))}
+                  )
+                </>
+              )}
+            </select>
+          </>
+        )}
 
         <label htmlFor="phone">전화번호</label>
         <input
           id="phone"
           className="h-10 rounded-xs border indent-2 mb-4"
-          type="phone"
+          type="tel"
           {...register("phone", { required: true })}
         ></input>
-        <label htmlFor="teamName">참여팀</label>
-        <select
-          className="h-10 rounded-xs border indent-2 mb-4"
-          id="teamName"
-          {...register("teamName", { required: true })}
-        >
-          {cohortData && (
-            <>
-              (
-              {cohortData.teams.map((cohort, i) => (
-                <option
-                  key={cohort.id}
-                  //   selected={cohortData.teams.length - 1 === i}
-                >
-                  {cohort.name}
-                </option>
-              ))}
-              )
-            </>
-          )}
-        </select>
+        {cohortData && cohortData.teams.length > 0 && (
+          <>
+            <label htmlFor="teamId">참여팀</label>
+            <select
+              className="h-10 rounded-xs border indent-2 mb-4"
+              id="teamId"
+              {...register("teamId", { required: true })}
+            >
+              {cohortData && (
+                <>
+                  (
+                  {cohortData.teams.map((team, i) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                  )
+                </>
+              )}
+            </select>
+          </>
+        )}
         <div className="w-full flex justify-end gap-2 mt-5">
           <button
             className="w-[120px] rounded-xs bg-gray-600 text-white"
