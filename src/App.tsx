@@ -1,25 +1,29 @@
-import MembershipManagementComponents from "./feature/membership/MembershipManagementComponent";
-import MainMenu from "./feature/common/MainMenu";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Lable from "./feature/common/Label";
+import MembershipManagementComponents from "./feature/membership/components/MembershipManagementComponent";
+import MainMenu from "./feature/common/components/MainMenu";
+import { QueryClientProvider } from "@tanstack/react-query";
+import Lable from "./feature/common/components/Label";
 import useUIStore from "./feature/lib/store/useUIStore";
+import AttendanceManagerComponent from "./feature/attendance/components/AttendanceManagerComponent";
+import { queryClient } from "./feature/lib/utils";
 
-const queryClient = new QueryClient();
+const ComponentMap = {
+  "회원 관리": <MembershipManagementComponents />,
+  "출결 관리": <AttendanceManagerComponent />,
+  "세션 관리": null,
+};
 
 function App() {
-  const user = useUIStore((state) => state.user);
-
+  const title = useUIStore((state) => state.title);
   return (
     <QueryClientProvider client={queryClient}>
       <div className="h-lvh flex">
         <MainMenu />
-        <div className="flex-4">
+        <div className="flex-4 relative">
           <Lable />
-          <MembershipManagementComponents />
+          {ComponentMap[title]}
         </div>
       </div>
     </QueryClientProvider>
   );
 }
-
 export default App;
