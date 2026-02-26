@@ -1,4 +1,4 @@
-import useUIStore, { type TITLE_TYPE } from "../lib/store/useUIStore";
+import useUIStore, { type TITLE_TYPE } from "../../lib/store/useUIStore";
 
 const MENU_LIST = [
   { id: 0, category: "회원 관리" },
@@ -19,10 +19,7 @@ export default function MainMenu() {
             <li
               className="p-2 mb-2"
               key={el.id}
-              onClick={() => {
-                selected(el.category as TITLE_TYPE);
-                console.log(el.category);
-              }}
+              onClick={() => selected(el.category as TITLE_TYPE)}
             >
               {el.category}
             </li>
