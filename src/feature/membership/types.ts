@@ -10,7 +10,7 @@ export interface IMembers {
 
 export interface IContent {
   id: number;
-  loginId: string;
+  loginId: number;
   name: string;
   phone: string;
   status: string;
@@ -24,14 +24,25 @@ export interface IContent {
 }
 
 export interface IInputs {
-  name: string;
-  loginId: string;
+  name?: string;
+  loginId?: string;
   generation: string;
   partName: string;
-  phone: string;
   teamName: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+}
+export interface ICreateInputs extends IInputs {
+  cohortId: number;
+  partId: number;
+  teamId: number;
 }
 
-export interface ICreateInputs extends IInputs {
-  cohortId: string;
+export interface ICreateError {
+  success: boolean;
+  error: {
+    code: string;
+    message: string;
+  };
 }
