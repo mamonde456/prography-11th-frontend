@@ -1,107 +1,71 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
-import type { ICreateInputs, IInputs } from "./types";
-import useUIStore from "../lib/store/useUIStore";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import type {
-  ICohort,
-  ICohorts,
-  ICohortsInfo,
-} from "../lib/store/types/member";
+import type { ICreateInputs, ICreateError } from "../types";
+import useUIStore from "../../lib/store/useUIStore";
 import { useEffect, useState } from "react";
+import useCohorts from "../hooks/useCohorts";
+import useDetailCohort from "../hooks/useDetailCohort";
+import { queryClient } from "../../lib/utils";
+import useCreateMutation from "../hooks/useCreateMutation";
 
 export default function CreateMemberComponent() {
   const setIsCreateMemberView = useUIStore(
     (state) => state.setIsCreateMemberView
   );
-  const { isLoading, data, isSuccess } = useQuery({
-    queryKey: ["cohorts"],
-    queryFn: async () => {
-      const res = await fetch("http://localhost:8080/api/v1/admin/cohorts");
-      return await res.json();
-    },
-    select: (res: ICohorts) => res.data,
-  });
+  const { isLoading, data, isSuccess } = useCohorts();
 
   const [selectedCohortId, setSelectedCohortId] = useState<number | null>(null);
 
-  const {
-    isLoading: isCohortLoading,
-    data: cohortData,
-    isSuccess: isCohortSuccess,
-  } = useQuery({
-    queryKey: ["cohortsInfo", selectedCohortId],
-    queryFn: async () => {
-      const res = await fetch(
-        "http://localhost:8080/api/v1/admin/cohorts/" + selectedCohortId
-      );
-      return await res.json();
-    },
-    enabled: selectedCohortId != null,
-    select: (res: ICohortsInfo) => res.data,
-  });
+  const { data: cohortData } = useDetailCohort({ selectedCohortId });
 
-  useEffect(() => {
-    console.log(cohortData);
-  }, [cohortData]);
+  const createMember = useCreateMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      setIsCreateMemberView(false);
+    },
+    onError: (data: ICreateError) => {
+      setError("loginId", { message: data.error.message });
+    },
+  });
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
+    setError,
   } = useForm<Omit<ICreateInputs, "generation" | "partName" | "temaName">>();
+  const contactValue = watch("contact");
+  const isEmail = contactValue?.includes("@");
+
   const onSubmit: SubmitHandler<
     Omit<ICreateInputs, "generation" | "partName" | "temaName">
   > = (data) => {
-    console.log(data);
+    const contact = isEmail
+      ? { email: data.contact }
+      : { phone: data?.contact };
     const newFormData = {
       ...data,
+      ...contact,
+      cohortId: Number(data?.cohortId),
+      partId: Number(data?.partId),
+      teamId: Number(data?.teamId),
       password: "prography",
     };
+    delete newFormData.contact;
 
     createMember.mutate(newFormData);
-    // setIsCreateMemberView(false);
   };
-
+  const cohortIdValue = watch("cohortId");
   useEffect(() => {
-    console.log(watch("cohortId"));
-    console.log(data);
     if (data) {
       const selectedId = Number(watch("cohortId")) || Number(data.at(-1)?.id);
       const selected = data.find((el) => el.id === selectedId);
-      console.log(data);
-      console.log(selectedId);
-      console.log(selected);
+
       if (selected) {
         setSelectedCohortId(selected.id);
       }
     }
-  }, [watch("cohortId"), data]);
-
-  const createMember = useMutation({
-    mutationKey: ["updateMemberInfo"],
-    mutationFn: async (
-      userInfo: Omit<ICreateInputs, "generation" | "partName" | "temaName"> & {
-        password: string;
-      }
-    ) => {
-      const res = await fetch("http://localhost:8080/api/v1/admin/members", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userInfo),
-      });
-      return await res.json();
-    },
-    onSuccess(data, variables, onMutateResult, context) {
-      console.log(
-        "data, variables, onMutateResult, context, ",
-        data,
-        variables,
-        onMutateResult,
-        context
-      );
-    },
-  });
+  }, [cohortIdValue, data]);
 
   return (
     <section>
@@ -112,43 +76,65 @@ export default function CreateMemberComponent() {
         <label htmlFor="name">이름</label>
         <input
           id="name"
-          className="h-10 rounded-xs border indent-2 mb-4 "
+          className="h-10 rounded-xs border indent-2"
           type="text"
-          {...register("name", { required: true })}
+          {...register("name", {
+            required: true,
+            pattern: {
+              value: /^\S.*\S$|^\S$/,
+              message: "공백은 입력할 수 없습니다",
+            },
+          })}
         ></input>
+        <span className="text-[14px] text-red-400 mb-4 p-1">
+          {errors?.name?.message}
+        </span>
+
         <label htmlFor="loginId">아이디</label>
         <input
           id="loginId"
-          className="h-10 rounded-xs border indent-2 mb-4"
+          className="h-10 rounded-xs border indent-2"
           type="text"
-          {...register("loginId", { required: true })}
+          {...register("loginId", {
+            required: true,
+            pattern: {
+              value: /^[a-zA-Z0-9.]+$/,
+              message: "영어, 숫자, 마침표(.)만 입력 가능합니다",
+            },
+          })}
         ></input>
+        <span className="text-[14px] text-red-400 mb-4 p-1">
+          {errors?.loginId?.message}
+        </span>
+
         <label htmlFor="cohortId">기수</label>
         <select
-          className="h-10 rounded-xs border indent-2 mb-4"
+          className="h-10 rounded-xs border indent-2"
           id="cohortId"
           defaultValue={data?.at(-1)?.id}
           {...register("cohortId", { required: true })}
         >
           {isSuccess && (
             <>
-              {data.map((cohort, i) => (
-                <option
-                  key={cohort.id}
-                  // selected={data.length - 1 === i}
-                  value={cohort.id}
-                >
-                  {cohort.name}
-                </option>
-              ))}
+              {data
+                .slice()
+                .reverse()
+                .map((cohort, i) => (
+                  <option key={cohort.id} value={cohort.id}>
+                    {cohort.name}
+                  </option>
+                ))}
             </>
           )}
         </select>
+        <span className="text-[14px] text-red-400 mb-4 p-1">
+          {errors?.cohortId?.message}
+        </span>
         {cohortData && cohortData.parts.length > 0 && (
           <>
             <label htmlFor="partId">파트</label>
             <select
-              className="h-10 rounded-xs border indent-2 mb-4"
+              className="h-10 rounded-xs border indent-2"
               id="partId"
               {...register("partId", { required: true })}
             >
@@ -164,16 +150,38 @@ export default function CreateMemberComponent() {
                 </>
               )}
             </select>
+            <span className="text-[14px] text-red-400 mb-4 p-1">
+              {errors?.partId?.message}
+            </span>
           </>
         )}
 
-        <label htmlFor="phone">전화번호</label>
+        <label htmlFor="contact">전화번호 | 이메일</label>
         <input
-          id="phone"
-          className="h-10 rounded-xs border indent-2 mb-4"
-          type="tel"
-          {...register("phone", { required: true })}
+          id="contact"
+          className="h-10 rounded-xs border indent-2"
+          type="text"
+          {...register("contact", {
+            required: true,
+            validate: (value) => {
+              if (!value) return "공백은 입력하실 수 없습니다.";
+              if (value?.includes("@")) {
+                return (
+                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ||
+                  "이메일 형식이 올바르지 않습니다."
+                );
+              }
+              return (
+                /^010-\d{4}-\d{4}$/.test(value) ||
+                "전화번호 형식이 올바르지 않습니다"
+              );
+            },
+          })}
         ></input>
+        <span className="text-[14px] text-red-400 mb-4 p-1">
+          {errors?.contact?.message}
+        </span>
+
         {cohortData && cohortData.teams.length > 0 && (
           <>
             <label htmlFor="teamId">참여팀</label>
